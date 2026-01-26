@@ -1,0 +1,13 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:80"
+    volumes:
+      - ./app:/app/app
+      - ~/.aws:/root/.aws
+    environment:
+      - AWS_PROFILE=default
+      - S3_BUCKET_NAME=takaken94-exchange-rate-fetcher
+      - S3_PREFIX=rates-data
+    command: uvicorn app.main:app --host 0.0.0.0 --port 80 --reload

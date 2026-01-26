@@ -30,19 +30,11 @@ Amazon S3 に蓄積された為替レートを表示する Webシステム<br>
 プロジェクトルートにて以下のコマンドを実行します。
 
 ```bash
-# Docker イメージの作成
-docker build -t exchange_rate_viewer .
-
 # SSO login
 aws sso login
 
 # Docker コンテナの起動
-docker run -p 8000:80 \
-  -v ~/.aws:/root/.aws \
-  -e AWS_PROFILE=default \
-  -e S3_BUCKET_NAME="takaken94-exchange-rate-fetcher" \
-  -e S3_PREFIX="rates-data" \
-  exchange_rate_viewer
+docker compose up
 ```
 
 ### テスト結果
