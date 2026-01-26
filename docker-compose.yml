@@ -1,13 +1,21 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      target: development
     ports:
       - "8000:80"
     volumes:
+      # ソースコードをホストと同期
       - ./app:/app/app
+      # AWS認証情報のマウント
       - ~/.aws:/root/.aws
     environment:
+      - PYTHONPATH=.
       - AWS_PROFILE=default
       - S3_BUCKET_NAME=takaken94-exchange-rate-fetcher
       - S3_PREFIX=rates-data
+      # 開発環境であることを明示
+      - ENV=development
+    # 開発時は reload を有効化する（上書き）
     command: uvicorn app.main:app --host 0.0.0.0 --port 80 --reload
