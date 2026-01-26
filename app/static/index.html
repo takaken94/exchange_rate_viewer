@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>為替レート可視化</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; margin: 20px; }
+        .dashboard-header { text-align: center; margin-bottom: 30px; }
+        
+        /* グラフを並べるグリッドレイアウト */
+        .chart-grid {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        /* 各グラフのカード設定 */
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 15px;
+            width: 300px; /* 小さめのサイズ */
+        }
+        
+        .chart-title { font-weight: bold; margin-bottom: 10px; color: #333; }
+        .controls { text-align: center; margin-bottom: 30px; }
+        input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-header">
+        <h1>為替レート可視化</h1>
+    </div>
+
+    <div class="controls">
+        <label>期間: 
+            <input type="date" id="fromDate" value="2026-01-01" onchange="refreshAll()"> 〜 
+            <input type="date" id="toDate" value="2026-01-31" onchange="refreshAll()">
+        </label>
+    </div>
+
+    <div class="chart-grid">
+        <div class="chart-card">
+            <div class="chart-title">USD/JPY（ドル円）</div>
+            <canvas id="chart-JPY"></canvas>
+        </div>
+        <div class="chart-card">
+            <div class="chart-title">EUR/JPY（ユーロ円）</div>
+            <canvas id="chart-EUR"></canvas>
+        </div>
+        <div class="chart-card">
+            <div class="chart-title">GBP/JPY（ポンド円）</div>
+            <canvas id="chart-GBP"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // グラフインスタンスを管理するオブジェクト
+        const charts = {};
+
+        async function drawChart(currency) {
+            const fromDate = document.getElementById('fromDate').value;
+            const toDate = document.getElementById('toDate').value;
+            const params = new URLSearchParams({ currency, from_date: fromDate, to_date: toDate });
+
+            const response = await fetch(`/api/rates?${params}`);
+            const data = await response.json();
+
+            const ctx = document.getElementById(`chart-${currency}`).getContext('2d');
+            
+            // 既存のグラフがあれば破棄
+            if (charts[currency]) { charts[currency].destroy(); }
+
+            charts[currency] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.date),
+                    datasets: [{
+                        label: 'Rate',
+                        data: data.map(d => d.rate),
+                        borderColor: getCurrencyColor(currency),
+                        borderWidth: 2,
+                        pointRadius: 2,
+                        fill: false,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } }, // 凡例を隠してシンプルに
+                    scales: { y: { beginAtZero: false } }
+                }
+            });
+        }
+
+        // 通貨ごとに色を変える
+        function getCurrencyColor(curr) {
+            const colors = { 'JPY': '#4bc0c0', 'EUR': '#ff6384', 'GBP': '#36a2eb' };
+            return colors[curr] || '#999';
+        }
+
+        function refreshAll() {
+            ['JPY', 'EUR', 'GBP'].forEach(curr => drawChart(curr));
+        }
+
+        // 初期表示
+        refreshAll();
+    </script>
+</body>
+</html>

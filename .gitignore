@@ -1,0 +1,22 @@
+# コンパイルされたバイトコード
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 仮想環境
+.venv/
+venv/
+
+# 設定ファイル
+.env
+
+# build
+build/
+*.zip
+
+# logs
+logs/
+
+# SQLite
+*.sqlite3
+*.db
