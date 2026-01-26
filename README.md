@@ -37,9 +37,22 @@ aws sso login
 docker compose up
 ```
 
+### テスト
+pytest を使用して、テストを実行します。
+
+```bash
+# 起動中のコンテナで実行する場合
+docker compose exec app pytest -v
+
+# 新しくコンテナを起動して実行する場合
+docker compose run --rm app pytest -v
+```
+
+<!--
 ### テスト結果
 ```plaintext
 ```
+-->
 
 <!--
 ## 運用
