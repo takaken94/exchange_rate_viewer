@@ -37,6 +37,27 @@ aws sso login
 docker compose up
 ```
 
+```
+user_name@host_name:~/work/exchange_rate_viewer$ docker compose up
+WARN[0000] No services to build
+Attaching to app-1
+app-1  | INFO:     Will watch for changes in these directories: ['/app']
+app-1  | INFO:     Uvicorn running on http://0.0.0.0:80 (Press CTRL+C to quit)
+app-1  | INFO:     Started reloader process [1] using WatchFiles
+app-1  | INFO:     Started server process [8]
+app-1  | INFO:     Waiting for application startup.
+app-1  | INFO:     Application startup complete.
+```
+
+「Application startup complete.」が表示されたら、Webブラウザで http://localhost:8000 にアクセスしてください。
+
+![index.html](doc/exchange_rate_viewer.jpg)
+
+APIドキュメントは http://localhost:8000/docs にて確認できます。
+
+![Swagger UI](doc/swagger_ui.jpg)
+
+
 ### テスト
 pytest を使用して、テストを実行します。
 
