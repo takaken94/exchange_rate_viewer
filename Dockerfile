@@ -45,8 +45,8 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 # アプリ本体のみをコピー
 COPY ./app ./app
 
-# セキュリティのため非rootユーザーを作成して実行
-RUN useradd -m appuser
+# ユーザー作成と同時に、/app ディレクトリの所有者を変更する
+RUN useradd -m appuser && chown -R appuser:appuser /app
 USER appuser
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
