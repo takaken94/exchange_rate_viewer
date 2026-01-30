@@ -1,32 +1,57 @@
 # Exchange Rate Viewer 為替レート可視化
 
 ## 概要
-Amazon S3 に蓄積された為替レートを表示する Webシステム<br>
+Amazon S3 に蓄積された為替レートを可視化する Webシステム
 
-### 背景・目的
-外部 API から取得して、S3 に蓄積した為替レートを、「期間指定で可視化する」Webシステムを想定し、
-Webフレームワークの FastAPI を利用して実装しました。
+### 目的
+Exchange Rate Fetcher（為替レート取得ツール）が S3 に蓄積している為替レート（JSONファイル）を参照して可視化します。
+Webフレームワークの FastAPI を利用して実装しています。
+
+![index.html](doc/exchange_rate_viewer.jpg)
 
 ## システム構成
-[S3] → [FastAPI] → [Browser]
+[S3] → [FastAPI] → [ブラウザ]
+
+### Infrastructure as Code
+AWS インフラは、Terraform を使用して作成しています。<br>
+生成AI が生成したコードを参考にして、Docker コンテナを ECS on Fargate 上で実行するために必要な最小構成となるよう整理・調整しました。
+
+個人開発ポートフォリオであることを踏まえ、コスト最小化を優先して、以下の設定にしています。
+- Fargate タスクは、Public Subnet に配置しました。（セキュリティは ALB からの接続のみ許可で担保し、VPC エンドポイントまたは、NAT Gateway 利用を回避）
+- HTTP (ポート 80) でのアクセス
+- ドメイン、DNS 未使用
 
 ## 使用技術
 - **言語**: Python 3.11
-- **ライブラリ**: FastAPI、uvicorn、boto3
-<!--
-- **基盤**: AWS (Fargate、S3)
--->
+- **ライブラリ**: FastAPI、uvicorn、boto3、Chart.js
+- **インフラ**: AWS (ECS on Fargate、S3)
 
 ## 機能
 - **データ取得**: Amazon S3 バケットから JSON形式の為替レートを取得
-- **API**: REST API（パラメータ: 通貨コード、日付from、日付to）
-```
-http://localhost:8000/api/rates?currency=JPY&from_date=2026-01-26&to_date=2026-01-26
-```
+- **REST API**: 為替レート取得（パラメータ: 通貨コード、日付from、日付to）
 - **データ表示**: Web ブラウザで為替レートをグラフ表示
 
-## 実行方法
-### 開発環境
+### 為替レート取得 API（例）
+リクエスト URL
+```
+http://localhost:8000/api/rates?currency=JPY&from_date=2026-01-26&to_date=2026-01-27
+```
+
+レスポンス Body
+```
+[
+  {
+    "date": "2026-01-26",
+    "rate": 154.21
+  },
+  {
+    "date": "2026-01-27",
+    "rate": 153.34
+  }
+]
+```
+
+## 開発環境
 - **OS**: Windows 11 + WSL2 (Ubuntu)
 - **環境構成**: Docker
 - **認証**: aws sso login により認証済みであること
@@ -56,12 +81,9 @@ app-1  | INFO:     Application startup complete.
 
 「Application startup complete.」が表示されたら、Webブラウザで http://localhost:8000 にアクセスしてください。
 
-![index.html](doc/exchange_rate_viewer.jpg)
-
 APIドキュメントは http://localhost:8000/docs にて確認できます。
 
 ![Swagger UI](doc/swagger_ui.jpg)
-
 
 ### テスト
 pytest を使用して、テストを実行します。
@@ -74,13 +96,37 @@ docker compose exec app pytest -v
 docker compose run --rm app pytest -v
 ```
 
-<!--
-### テスト結果
-```plaintext
-```
--->
+## 運用環境
+### リリース準備
+```bash
+# 1. ビルド
+docker build -f Dockerfile.prod -t exchange-rate-viewer:prod .
 
-<!--
-## 運用
-以下は Fargate 上での稼働状況です。
--->
+# 2. ローカルで起動・動作確認
+docker run --rm -p 8000:8000 --env-file .env -v ~/.aws:/root/.aws exchange-rate-viewer:prod
+
+# 3. ECRへプッシュ
+docker push リポジトリURI
+```
+### AWSインフラ構築
+プロジェクトルート/terraform 配下で、以下のコマンドを実行します。
+
+```bash
+# 初期化
+terraform init
+# 計画確認
+terraform plan
+# 実行
+terraform apply
+```
+
+![terraform apply 1](doc/terraform_apply1.jpg)
+![terraform apply 2](doc/terraform_apply2.jpg)
+![terraform apply 3](doc/terraform_apply3.jpg)
+
+### 運用状況
+#### ログ（Amazon CloudWatch Logs）
+![CloudWatch Logs](doc/cloud_watch_log.jpg)
+
+#### ECS
+![ECS](doc/ecs.jpg)
