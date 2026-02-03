@@ -3,23 +3,9 @@
 ## 概要
 Amazon S3 に蓄積された為替レートを可視化する Webシステム
 
-### 目的
-Exchange Rate Fetcher（為替レート取得ツール）が S3 に蓄積している為替レート（JSONファイル）を参照して可視化します。
-Webフレームワークの FastAPI を利用して実装しています。
+為替レート取得ツールが S3 に蓄積している為替レート（JSONファイル）を参照して可視化します。
 
 ![index.html](doc/exchange_rate_viewer.jpg)
-
-## システム構成
-[S3] → [FastAPI] → [ブラウザ]
-
-### Infrastructure as Code
-AWS インフラは、Terraform を使用して作成しています。<br>
-生成AI が生成したコードを参考にして、Docker コンテナを ECS on Fargate 上で実行するために必要な最小構成となるよう整理・調整しました。
-
-個人開発ポートフォリオであることを踏まえ、コスト最小化を優先して、以下の設定にしています。
-- Fargate タスクは、Public Subnet に配置しました。（セキュリティは ALB からの接続のみ許可で担保し、VPC エンドポイントまたは、NAT Gateway 利用を回避）
-- HTTP (ポート 80) でのアクセス
-- ドメイン、DNS 未使用
 
 ## 使用技術
 - **言語**: Python 3.11
@@ -51,10 +37,20 @@ http://localhost:8000/api/rates?currency=JPY&from_date=2026-01-26&to_date=2026-0
 ]
 ```
 
+## システム構成
+
+![システム構成図](doc/system_architecture_viewer.png)
+
+### Infrastructure as Code
+AWS インフラは、Terraform を使用して作成しています。
+
+個人開発ポートフォリオであることを踏まえ、コスト最小化を優先して、以下の設定にしています。
+- Fargate タスクは、Public Subnet に配置する。VPC エンドポイント、または、NAT Gateway の利用を回避するため。
+- Fargate タスクのセキュリティは ALB からの接続のみ許可で担保する。
+
 ## 開発環境
 - **OS**: Windows 11 + WSL2 (Ubuntu)
 - **環境構成**: Docker
-- **認証**: aws sso login により認証済みであること
 
 ### ローカル実行
 プロジェクトルートにて以下のコマンドを実行します。
@@ -79,12 +75,13 @@ app-1  | INFO:     Waiting for application startup.
 app-1  | INFO:     Application startup complete.
 ```
 
-「Application startup complete.」が表示されたら、Webブラウザで http://localhost:8000 にアクセスしてください。
+「Application startup complete.」が表示されたら、Webブラウザで `http://localhost:8000` にアクセスしてください。
 
-APIドキュメントは http://localhost:8000/docs にて確認できます。
+APIドキュメントは `http://localhost:8000/docs` にて確認できます。
 
 ![Swagger UI](doc/swagger_ui.jpg)
 
+<!--
 ### テスト
 pytest を使用して、テストを実行します。
 
@@ -95,6 +92,7 @@ docker compose exec app pytest -v
 # 新しくコンテナを起動して実行する場合
 docker compose run --rm app pytest -v
 ```
+-->
 
 ## 運用環境
 ### リリース準備
@@ -108,21 +106,22 @@ docker run --rm -p 8000:8000 --env-file .env -v ~/.aws:/root/.aws exchange-rate-
 # 3. ECRへプッシュ
 docker push リポジトリURI
 ```
-### AWSインフラ構築
+### AWSインフラ構築およびデブロイ
 プロジェクトルート/terraform 配下で、以下のコマンドを実行します。
 
 ```bash
-# 初期化
+# 初期化（作業ディレクトリの準備）
 terraform init
-# 計画確認
+# チェック
+terraform validate
+# 実行計画の参照
 terraform plan
-# 実行
+# 作成または更新
 terraform apply
 ```
 
 ![terraform apply 1](doc/terraform_apply1.jpg)
 ![terraform apply 2](doc/terraform_apply2.jpg)
-![terraform apply 3](doc/terraform_apply3.jpg)
 
 ### 運用状況
 #### ログ（Amazon CloudWatch Logs）
