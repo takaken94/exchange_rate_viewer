@@ -46,7 +46,7 @@ AWS インフラは、Terraform を使用して作成しています。
 
 個人開発ポートフォリオであることを踏まえ、コスト最小化を優先して、以下の設定にしています。
 - Fargate タスクは、Public Subnet に配置する。VPC エンドポイント、または、NAT Gateway の利用を回避するため。
-- Fargate タスクのセキュリティは ALB からの接続のみ許可で担保する。
+- Fargate タスクのセキュリティは、「ALB からの接続のみ許可」で担保する。
 
 ## 開発環境
 - **OS**: Windows 11 + WSL2 (Ubuntu)
