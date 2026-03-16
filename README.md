@@ -3,7 +3,7 @@
 ## 概要
 Amazon S3 に蓄積された為替レートを可視化する Webシステム
 
-為替レート取得ツールが S3 に蓄積している為替レート（JSONファイル）を参照して可視化します。
+為替レート取得ツールが S3 に蓄積している為替レート（JSON Linesファイル）を参照して可視化します。
 
 ![index.html](doc/exchange_rate_viewer.jpg)
 
@@ -13,8 +13,7 @@ Amazon S3 に蓄積された為替レートを可視化する Webシステム
 - **インフラ**: AWS (ECS on Fargate、S3)
 
 ## 機能
-- **データ取得**: Amazon S3 バケットから JSON形式の為替レートを取得
-- **REST API**: 為替レート取得（パラメータ: 通貨コード、日付from、日付to）
+- **データ取得API**: S3 バケットから 為替レートを取得（パラメータ: 通貨コード、日付from、日付to）
 - **データ表示**: Web ブラウザで為替レートをグラフ表示
 
 ### 為替レート取得 API（例）
@@ -129,3 +128,21 @@ terraform apply
 
 #### ECS
 ![ECS](doc/ecs.jpg)
+
+## 可視化のパフォーマンス特性
+S3 Scan (Python) と Amazon Athena (SQL) の検索を比較しました。<br>
+- S3 Scan (Python): ECS Task --- (boto3) ---> S3
+- Athena (SQL):     ECS Task --- (Query) ---> [Athena] --- (Scan) ---> S3
+
+| 期間  | データ件数 | S3 Scan (Python) | Athena (SQL) |
+| :--- | :--- | :--- | :--- |
+| 1か月 |  21件 |   837 ms | 1,321 ms |
+| 2か月 |  41件 | 1,636 ms | 1,406 ms |
+| 3か月 |  51件 | 2,062 ms | 1,356 ms |
+
+S3 Scan (Python) は、データ量に対して線形に時間が増加する傾向（40ms/件）があるのに対して、<br>
+Athena (SQL) は、データ量が増加しても、比較的安定したレスポンスとなっています。
+
+![API Performance 1 month](doc/api_performance_1_month.jpg)
+![API Performance 2 months](doc/api_performance_2_months.jpg)
+![API Performance 3 months](doc/api_performance_3_months.jpg)
