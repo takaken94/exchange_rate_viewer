@@ -26,8 +26,8 @@ resource "aws_ecs_task_definition" "main" {
 
       # 環境変数を定義
       environment = [
-        { name = "S3_BUCKET_NAME", value = "takaken94-exchange-rate-fetcher" },
-        { name = "S3_PREFIX", value = "rates-data" }
+        { name = "S3_BUCKET_NAME", value = "takaken94-exchange-rate" },
+        { name = "S3_PREFIX", value = "rate-data" }
       ],
       # ポート設定
       portMappings = [
