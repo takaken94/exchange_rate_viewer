@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Query
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 import json
 from typing import Optional
@@ -34,6 +35,13 @@ app = FastAPI()
 if not app:
     logger.error("FastAPI アプリケーションの作成に失敗しました。")
     sys.exit(1)
+
+# main.py のあるディレクトリからの相対パスで指定
+current_dir = os.path.dirname(os.path.abspath(__file__))
+static_dir = os.path.join(current_dir, "static")
+
+# マウント設定
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # S3クライアントの作成
 s3_client = boto3.client("s3")
