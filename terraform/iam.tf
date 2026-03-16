@@ -30,7 +30,8 @@ resource "aws_iam_policy" "s3_access" {
         Action = [
           "s3:GetObject",
           "s3:PutObject",
-          "s3:ListBucket"
+          "s3:ListBucket",
+          "s3:GetBucketLocation" # 追加：Athenaがバケットの場所を確認するために必要
         ]
         Effect = "Allow"
         Resource = [
@@ -60,4 +61,41 @@ resource "aws_iam_role" "ecs_task_role" {
 resource "aws_iam_role_policy_attachment" "s3_access_attach" {
   role       = aws_iam_role.ecs_task_role.name
   policy_arn = aws_iam_policy.s3_access.arn
+}
+
+# Athenaへのアクセス権限を定義
+resource "aws_iam_policy" "athena_access" {
+  name        = "exchange-rate-athena-access"
+  description = "Allow ECS task to execute Athena queries"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "athena:StartQueryExecution",
+          "athena:GetQueryExecution",
+          "athena:GetQueryResults",
+          "athena:StopQueryExecution"
+        ]
+        Resource = ["*"] # 特定のワークグループに制限することも可能です
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "glue:GetTable",
+          "glue:GetDatabase",
+          "glue:GetPartitions"
+        ]
+        Resource = ["*"] # Athenaがメタデータを参照するために必要です
+      }
+    ]
+  })
+}
+
+# ECSタスクロールにAthenaポリシーをアタッチ
+resource "aws_iam_role_policy_attachment" "athena_access_attach" {
+  role       = aws_iam_role.ecs_task_role.name
+  policy_arn = aws_iam_policy.athena_access.arn
 }
