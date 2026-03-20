@@ -1,6 +1,6 @@
 # VPC の作成
 resource "aws_vpc" "main" {
-  cidr_block           = "10.0.0.0/16"
+  cidr_block           = var.vpc_cidr
   enable_dns_support   = true
   enable_dns_hostnames = true
 
@@ -21,7 +21,7 @@ resource "aws_internet_gateway" "main" {
 # --- Public Subnets ---
 resource "aws_subnet" "public_1a" {
   vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.1.0/24"
+  cidr_block              = var.public_subnet_1a_cidr
   availability_zone       = "ap-northeast-1a"
   map_public_ip_on_launch = true # 公開用なので自動でIP付与
 
@@ -32,7 +32,7 @@ resource "aws_subnet" "public_1a" {
 
 resource "aws_subnet" "public_1c" {
   vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.2.0/24"
+  cidr_block              = var.public_subnet_1c_cidr
   availability_zone       = "ap-northeast-1c"
   map_public_ip_on_launch = true
 
@@ -44,7 +44,7 @@ resource "aws_subnet" "public_1c" {
 # --- Private Subnets (NAT Gatewayなし) ---
 resource "aws_subnet" "private_1a" {
   vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.10.0/24"
+  cidr_block        = var.private_subnet_1a_cidr
   availability_zone = "ap-northeast-1a"
 
   tags = {
@@ -54,7 +54,7 @@ resource "aws_subnet" "private_1a" {
 
 resource "aws_subnet" "private_1c" {
   vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.11.0/24"
+  cidr_block        = var.private_subnet_1c_cidr
   availability_zone = "ap-northeast-1c"
 
   tags = {

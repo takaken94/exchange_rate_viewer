@@ -35,8 +35,8 @@ resource "aws_iam_policy" "s3_access" {
         ]
         Effect = "Allow"
         Resource = [
-          "arn:aws:s3:::takaken94-exchange-rate",
-          "arn:aws:s3:::takaken94-exchange-rate/*"
+          "arn:aws:s3:::${var.s3_bucket_name}",
+          "arn:aws:s3:::${var.s3_bucket_name}/*"
         ]
       }
     ]

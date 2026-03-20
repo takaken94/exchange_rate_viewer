@@ -1,3 +1,11 @@
+# data ソースで現在のアカウントIDを動的に取得
+data "aws_caller_identity" "current" {}
+
+# ECR リポジトリ URI
+locals {
+  ecr_image = "${data.aws_caller_identity.current.account_id}.dkr.ecr.ap-northeast-1.amazonaws.com/exchange-rate-viewer:prod"
+}
+
 resource "aws_ecs_cluster" "main" {
   name = "exchange-rate-cluster"
 }
@@ -21,13 +29,13 @@ resource "aws_ecs_task_definition" "main" {
   container_definitions = jsonencode([
     {
       name      = "exchange-rate-container"
-      image     = "369073369620.dkr.ecr.ap-northeast-1.amazonaws.com/exchange-rate-viewer:prod" # ECR リポジトリ URI
+      image     = local.ecr_image
       essential = true
 
       # 環境変数を定義
       environment = [
-        { name = "S3_BUCKET_NAME", value = "takaken94-exchange-rate" },
-        { name = "S3_PREFIX", value = "rate-data" }
+        { name = "S3_BUCKET_NAME", value = var.s3_bucket_name },
+        { name = "S3_PREFIX", value = var.s3_prefix }
       ],
       # ポート設定
       portMappings = [
